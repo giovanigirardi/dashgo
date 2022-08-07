@@ -1,5 +1,4 @@
 import { RiAddLine, RiPencilLine } from "react-icons/ri";
-import { useQuery } from "react-query";
 
 import Link from "next/link";
 
@@ -24,23 +23,10 @@ import {
 import { Header } from "../../components/Header";
 import { Pagination } from "../../components/Pagination";
 import { Sidebar } from "../../components/Sidebar";
-import { api } from "../../services/api";
+import { useUsers } from "../../services/hooks/users/useUsers";
 
 const UserList = () => {
-  const { data, isLoading, isFetching, error } = useQuery("users", async () => {
-    const { data } = await api.get("/users");
-
-    const users = data.users.map((user) => ({
-      ...user,
-      createdAt: new Date(user.createdAt).toLocaleDateString("pt-BR", {
-        day: "2-digit",
-        month: "long",
-        year: "numeric",
-      }),
-    }));
-
-    return users;
-  });
+  const { data, isLoading, isFetching, error } = useUsers();
 
   const isWideVersion = useBreakpointValue({
     base: false,
