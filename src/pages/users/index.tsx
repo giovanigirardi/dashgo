@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { RiAddLine, RiPencilLine } from "react-icons/ri";
+import { QueryClient } from "react-query";
 
-import Link from "next/link";
+import NextLink from "next/link";
 
 import {
   Box,
@@ -10,6 +11,7 @@ import {
   Flex,
   Heading,
   Icon,
+  Link,
   Spinner,
   Table,
   Tbody,
@@ -25,6 +27,8 @@ import { Header } from "../../components/Header";
 import { Pagination } from "../../components/Pagination";
 import { Sidebar } from "../../components/Sidebar";
 import { useUsers } from "../../services/hooks/users/useUsers";
+import { queryClient } from "../../services/queryClient";
+import { api } from "../../services/api";
 
 const UserList = () => {
   const [page, setPage] = useState(1);
@@ -34,6 +38,20 @@ const UserList = () => {
     base: false,
     lg: true,
   });
+
+  const handlePrefetchUser = async (userId: number) => {
+    await queryClient.prefetchQuery(
+      ["user", { userId }],
+      async () => {
+        const response = await api.get(`/users/${userId}`);
+
+        return response.data;
+      },
+      {
+        staleTime: 1000 * 60 * 10, // 10 minutes
+      }
+    );
+  };
 
   return (
     <Box>
@@ -50,7 +68,7 @@ const UserList = () => {
                 <Spinner size="sm" color="gray.500" ml="4" />
               )}
             </Heading>
-            <Link href="/users/create" passHref>
+            <NextLink href="/users/create" passHref>
               <Button
                 as="a"
                 size="sm"
@@ -60,7 +78,7 @@ const UserList = () => {
               >
                 Criar novo usuário
               </Button>
-            </Link>
+            </NextLink>
           </Flex>
 
           {isLoading ? (
@@ -92,7 +110,14 @@ const UserList = () => {
                       </Td>
                       <Td>
                         <Box>
-                          <Text fontWeight="bold">{user.name}</Text>
+                          <Link
+                            color="purple.400"
+                            onMouseEnter={() =>
+                              handlePrefetchUser(Number(user.id))
+                            }
+                          >
+                            <Text fontWeight="bold">{user.name}</Text>
+                          </Link>
                           <Text fontSize="sm" color="gray.300">
                             {user.email}
                           </Text>
