@@ -1,3 +1,8 @@
+import { useMutation } from "react-query";
+
+import Link from "next/link";
+import { useRouter } from "next/router";
+
 import {
   Box,
   Button,
@@ -8,7 +13,6 @@ import {
   SimpleGrid,
   VStack,
 } from "@chakra-ui/react";
-import Link from "next/link";
 
 import { useForm } from "react-hook-form";
 import * as yup from "yup";
@@ -17,6 +21,8 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { Input } from "../../components/Form/Input";
 import { Header } from "../../components/Header";
 import { Sidebar } from "../../components/Sidebar";
+import { api } from "../../services/api";
+import { queryClient } from "../../services/queryClient";
 
 interface CreateUserFormData {
   name: string;
@@ -39,6 +45,26 @@ const CreateUserFormSchema = yup.object().shape({
 });
 
 const CreateUser = () => {
+  const router = useRouter();
+
+  const createUser = useMutation(
+    async (user: CreateUserFormData) => {
+      const response = await api.post("/users", {
+        user: {
+          ...user,
+          created_at: new Date(),
+        },
+      });
+
+      return response.data.user;
+    },
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries("users");
+      },
+    }
+  );
+
   const {
     register,
     handleSubmit,
@@ -48,9 +74,9 @@ const CreateUser = () => {
   });
 
   const handleCreateUser = handleSubmit(async (values) => {
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    await createUser.mutateAsync(values);
 
-    console.log(values);
+    router.push("/users");
   });
 
   return (
